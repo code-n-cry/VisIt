@@ -298,6 +298,37 @@
   text-align: right;
 }
 
+.bar-value-sub {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* ---------- nested per-category breakdown ---------- */
+
+.breakdown {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.bar-row--sub {
+  grid-template-columns: 76px 1fr auto;
+  padding: 4px 0;
+}
+
+.bar-row--sub .bar-row-label {
+  font-size: 12px;
+}
+
+.bar-track--sub {
+  height: 14px;
+}
+
+.bar-fill--sub {
+  cursor: default;
+  opacity: 0.85;
+}
+
 .chart-tooltip {
   position: fixed;
   z-index: 30;

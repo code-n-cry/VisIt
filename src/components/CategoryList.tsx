@@ -3,6 +3,7 @@ import type { Category, Entry } from "../types";
 import { convert } from "../lib/exchangeRates";
 import { categoryColorVar } from "../lib/colors";
 import { formatAmount } from "../lib/format";
+import { CategoryBreakdown } from "./CategoryBreakdown";
 
 interface Props {
   categories: Category[];
@@ -56,6 +57,12 @@ export function CategoryList({
 
             {isOpen && (
               <div className="entry-list">
+                <CategoryBreakdown
+                  entries={catEntries}
+                  displayCurrency={displayCurrency}
+                  rates={rates}
+                  color={color}
+                />
                 {catEntries.length === 0 ? (
                   <div className="entry-row">
                     <span className="entry-name hint">Пока нет трат в этой категории</span>
