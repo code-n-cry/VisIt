@@ -10,9 +10,14 @@ function makeId(): string {
 function emptyData(): AppData {
   return {
     settings: null,
-    categories: DEFAULT_CATEGORIES.map((name) => ({ id: makeId(), name })),
+    categories: DEFAULT_CATEGORIES.map((name) => ({ id: makeId(), name, parentId: null })),
     entries: [],
   };
+}
+
+/** Older saves predate subcategories and have no parentId — treat those as top-level. */
+function migrateCategories(categories: Category[] | undefined): Category[] {
+  return (categories ?? []).map((c) => ({ ...c, parentId: c.parentId ?? null }));
 }
 
 export function loadData(): AppData {
@@ -22,7 +27,7 @@ export function loadData(): AppData {
     const parsed = JSON.parse(raw) as AppData;
     return {
       settings: parsed.settings ?? null,
-      categories: parsed.categories ?? [],
+      categories: migrateCategories(parsed.categories),
       entries: parsed.entries ?? [],
     };
   } catch {
@@ -45,7 +50,7 @@ export function parseImportedJson(text: string): AppData {
   }
   return {
     settings: (parsed.settings as Settings) ?? null,
-    categories: parsed.categories as Category[],
+    categories: migrateCategories(parsed.categories as Category[]),
     entries: parsed.entries as Entry[],
   };
 }

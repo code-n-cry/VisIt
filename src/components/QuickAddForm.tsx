@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Category } from "../types";
 import { CURRENCIES } from "../config/currencies";
+import { flattenTree } from "../lib/categoryTree";
 
 const NEW_CATEGORY = "__new__";
 
@@ -12,7 +13,8 @@ interface Props {
 }
 
 export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAddEntry }: Props) {
-  const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? NEW_CATEGORY);
+  const flatCategories = useMemo(() => flattenTree(categories), [categories]);
+  const [categoryId, setCategoryId] = useState<string>(flatCategories[0]?.category.id ?? NEW_CATEGORY);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [itemName, setItemName] = useState("");
   const [amount, setAmount] = useState("");
@@ -23,9 +25,9 @@ export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAdd
   // keep a valid selection if the category list changes under us
   useEffect(() => {
     if (categoryId !== NEW_CATEGORY && !categories.some((c) => c.id === categoryId)) {
-      setCategoryId(categories[0]?.id ?? NEW_CATEGORY);
+      setCategoryId(flatCategories[0]?.category.id ?? NEW_CATEGORY);
     }
-  }, [categories, categoryId]);
+  }, [categories, categoryId, flatCategories]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,9 +77,9 @@ export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAdd
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
         >
-          {categories.map((c) => (
+          {flatCategories.map(({ category: c, depth }) => (
             <option key={c.id} value={c.id}>
-              {c.name}
+              {depth > 0 ? `${"  ".repeat(depth)}↳ ${c.name}` : c.name}
             </option>
           ))}
           <option value={NEW_CATEGORY}>+ Новая категория</option>

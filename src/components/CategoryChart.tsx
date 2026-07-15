@@ -3,6 +3,7 @@ import type { Category, Entry } from "../types";
 import { convert } from "../lib/exchangeRates";
 import { categoryColorVar } from "../lib/colors";
 import { formatAmount } from "../lib/format";
+import { getSubtreeIds } from "../lib/categoryTree";
 
 interface Totals {
   category: Category;
@@ -36,8 +37,11 @@ export function CategoryChart({ categories, entries, displayCurrency, rates }: P
 
   const totals: Totals[] = useMemo(() => {
     return categories
+      .filter((category) => category.parentId === null)
       .map((category) => {
-        const catEntries = entries.filter((e) => e.categoryId === category.id);
+        // Roll up entries from subcategories so a payment method's total reflects its whole tree.
+        const subtreeIds = new Set(getSubtreeIds(categories, category.id));
+        const catEntries = entries.filter((e) => subtreeIds.has(e.categoryId));
         const total = catEntries.reduce(
           (sum, e) => sum + convert(e.amount, e.currency, displayCurrency, rates ?? {}),
           0,

@@ -11,8 +11,17 @@ import { CurrencyConverter } from "./components/CurrencyConverter";
 import { exportDataAsJson, parseImportedJson } from "./lib/storage";
 
 function App() {
-  const { data, setSettings, addCategory, addEntry, deleteEntry, deleteCategory, replaceAll, resetAll } =
-    useAppData();
+  const {
+    data,
+    setSettings,
+    addCategory,
+    editCategory,
+    addEntry,
+    deleteEntry,
+    deleteCategory,
+    replaceAll,
+    resetAll,
+  } = useAppData();
   const [importError, setImportError] = useState<string | null>(null);
 
   const displayCurrency = data.settings?.displayCurrency ?? "USD";
@@ -80,6 +89,8 @@ function App() {
             rates={rates}
             onDeleteEntry={deleteEntry}
             onDeleteCategory={deleteCategory}
+            onAddCategory={addCategory}
+            onEditCategory={editCategory}
           />
         </div>
       )}

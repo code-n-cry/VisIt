@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AppData, Category, Entry, Settings } from "../types";
 import { loadData, makeId, saveData } from "../lib/storage";
+import { getSubtreeIds } from "../lib/categoryTree";
 
 export function useAppData() {
   const [data, setData] = useState<AppData>(() => loadData());
@@ -13,10 +14,19 @@ export function useAppData() {
     setData((d) => ({ ...d, settings }));
   }, []);
 
-  const addCategory = useCallback((name: string): Category => {
-    const category: Category = { id: makeId(), name: name.trim() };
+  const addCategory = useCallback((name: string, parentId: string | null = null): Category => {
+    const category: Category = { id: makeId(), name: name.trim(), parentId };
     setData((d) => ({ ...d, categories: [...d.categories, category] }));
     return category;
+  }, []);
+
+  const editCategory = useCallback((id: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setData((d) => ({
+      ...d,
+      categories: d.categories.map((c) => (c.id === id ? { ...c, name: trimmed } : c)),
+    }));
   }, []);
 
   const addEntry = useCallback(
@@ -36,11 +46,14 @@ export function useAppData() {
   }, []);
 
   const deleteCategory = useCallback((id: string) => {
-    setData((d) => ({
-      ...d,
-      categories: d.categories.filter((c) => c.id !== id),
-      entries: d.entries.filter((e) => e.categoryId !== id),
-    }));
+    setData((d) => {
+      const removedIds = new Set(getSubtreeIds(d.categories, id));
+      return {
+        ...d,
+        categories: d.categories.filter((c) => !removedIds.has(c.id)),
+        entries: d.entries.filter((e) => !removedIds.has(e.categoryId)),
+      };
+    });
   }, []);
 
   const replaceAll = useCallback((next: AppData) => {
@@ -55,6 +68,7 @@ export function useAppData() {
     data,
     setSettings,
     addCategory,
+    editCategory,
     addEntry,
     deleteEntry,
     deleteCategory,
