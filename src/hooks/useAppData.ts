@@ -57,6 +57,28 @@ export function useAppData() {
     });
   }, []);
 
+  /** Reparents a category under a new parent (or to the root when null), refusing moves that would create a cycle. */
+  const moveCategory = useCallback((categoryId: string, newParentId: string | null) => {
+    setData((d) => {
+      if (categoryId === newParentId) return d;
+      const subtreeIds = new Set(getSubtreeIds(d.categories, categoryId));
+      if (newParentId !== null && subtreeIds.has(newParentId)) return d;
+      return {
+        ...d,
+        categories: d.categories.map((c) => (c.id === categoryId ? { ...c, parentId: newParentId } : c)),
+      };
+    });
+  }, []);
+
+  /** Moves a set of entries to a different (sub)category, for user-driven manual grouping. */
+  const moveEntriesToCategory = useCallback((entryIds: string[], targetCategoryId: string) => {
+    const idSet = new Set(entryIds);
+    setData((d) => ({
+      ...d,
+      entries: d.entries.map((e) => (idSet.has(e.id) ? { ...e, categoryId: targetCategoryId } : e)),
+    }));
+  }, []);
+
   /** Groups a category's own entries by name (stripping trailing numbers) into new subcategories. */
   const splitIntoSubcategories = useCallback((categoryId: string) => {
     setData((d) => {
@@ -101,6 +123,8 @@ export function useAppData() {
     addEntry,
     deleteEntry,
     deleteCategory,
+    moveCategory,
+    moveEntriesToCategory,
     splitIntoSubcategories,
     replaceAll,
     resetAll,

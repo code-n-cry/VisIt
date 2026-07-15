@@ -288,6 +288,12 @@
   min-width: 0;
 }
 
+.swap-btn {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
 .btn {
   border-radius: 9px;
   padding: 10px 16px;
@@ -722,6 +728,62 @@
 .entry-row .delete-btn:hover {
   color: var(--critical);
   transform: scale(1.1);
+}
+
+.entry-row .entry-checkbox {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--series-1);
+  cursor: pointer;
+}
+
+.entry-row.is-selected {
+  background: color-mix(in srgb, var(--series-1) 10%, transparent);
+}
+
+.selection-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--series-1) 7%, transparent);
+  border-bottom: 1px solid var(--gridline);
+  animation: fade-in-up 0.2s var(--ease-out) both;
+}
+
+.selection-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.selection-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.selection-action .input,
+.selection-action .select {
+  padding: 6px 8px;
+  font-size: 13px;
+  width: auto;
+  min-width: 160px;
+}
+
+.move-category-row {
+  gap: 8px;
+}
+
+.move-category-row .select {
+  padding: 6px 8px;
+  font-size: 13px;
+  width: auto;
+  flex: 1;
+  min-width: 0;
 }
 
 /* ---------- subcategories ---------- */

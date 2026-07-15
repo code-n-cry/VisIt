@@ -19,6 +19,8 @@ function App() {
     addEntry,
     deleteEntry,
     deleteCategory,
+    moveCategory,
+    moveEntriesToCategory,
     splitIntoSubcategories,
     replaceAll,
     resetAll,
@@ -98,6 +100,8 @@ function App() {
                 onAddCategory={addCategory}
                 onEditCategory={editCategory}
                 onSplitIntoSubcategories={splitIntoSubcategories}
+                onMoveCategory={moveCategory}
+                onMoveEntriesToCategory={moveEntriesToCategory}
               />
             </div>
           )}

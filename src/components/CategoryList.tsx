@@ -11,6 +11,8 @@ interface Props {
   onAddCategory: (name: string, parentId: string | null) => Category;
   onEditCategory: (id: string, name: string) => void;
   onSplitIntoSubcategories: (categoryId: string) => void;
+  onMoveCategory: (categoryId: string, newParentId: string | null) => void;
+  onMoveEntriesToCategory: (entryIds: string[], targetCategoryId: string) => void;
 }
 
 export function CategoryList({
@@ -23,6 +25,8 @@ export function CategoryList({
   onAddCategory,
   onEditCategory,
   onSplitIntoSubcategories,
+  onMoveCategory,
+  onMoveEntriesToCategory,
 }: Props) {
   const orderedIds = categories.map((c) => c.id);
   const topLevel = categories.filter((c) => c.parentId === null);
@@ -46,6 +50,8 @@ export function CategoryList({
           onAddCategory={onAddCategory}
           onEditCategory={onEditCategory}
           onSplitIntoSubcategories={onSplitIntoSubcategories}
+          onMoveCategory={onMoveCategory}
+          onMoveEntriesToCategory={onMoveEntriesToCategory}
         />
       ))}
     </div>

@@ -8,10 +8,17 @@ export function CurrencyConverter({ defaultTo }: { defaultTo: string }) {
   const [amount, setAmount] = useState("100");
   const [from, setFrom] = useState(DEFAULT_CURRENCY);
   const [to, setTo] = useState(defaultTo);
+  const [spun, setSpun] = useState(false);
   const { rates, loading, error } = useExchangeRates(to);
 
   const parsed = Number(amount.replace(",", "."));
   const result = Number.isFinite(parsed) && rates ? convert(parsed, from, to, rates) : null;
+
+  function handleSwap() {
+    setFrom(to);
+    setTo(from);
+    setSpun((v) => !v);
+  }
 
   return (
     <div className="card stack">
@@ -37,6 +44,15 @@ export function CurrencyConverter({ defaultTo }: { defaultTo: string }) {
             ))}
           </select>
         </div>
+        <button
+          type="button"
+          className="icon-btn swap-btn"
+          aria-label="Поменять валюты местами"
+          style={{ transform: spun ? "rotate(180deg)" : "rotate(0deg)" }}
+          onClick={handleSwap}
+        >
+          ⇄
+        </button>
         <div className="field">
           <label htmlFor="conv-to">В</label>
           <select id="conv-to" className="select" value={to} onChange={(e) => setTo(e.target.value)}>

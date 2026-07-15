@@ -4,7 +4,7 @@ import type { Category, Entry } from "../types";
 import { convert } from "../lib/exchangeRates";
 import { categoryColorVar } from "../lib/colors";
 import { formatAmount } from "../lib/format";
-import { getChildren, getSubtreeIds } from "../lib/categoryTree";
+import { flattenTree, getChildren, getSubtreeIds } from "../lib/categoryTree";
 import { groupEntriesForSplit } from "../lib/autoGroup";
 import { CategoryBreakdown } from "./CategoryBreakdown";
 
@@ -21,6 +21,8 @@ interface Props {
   onAddCategory: (name: string, parentId: string | null) => Category;
   onEditCategory: (id: string, name: string) => void;
   onSplitIntoSubcategories: (categoryId: string) => void;
+  onMoveCategory: (categoryId: string, newParentId: string | null) => void;
+  onMoveEntriesToCategory: (entryIds: string[], targetCategoryId: string) => void;
 }
 
 export function CategoryNode({
@@ -36,12 +38,17 @@ export function CategoryNode({
   onAddCategory,
   onEditCategory,
   onSplitIntoSubcategories,
+  onMoveCategory,
+  onMoveEntriesToCategory,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(category.name);
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [childName, setChildName] = useState("");
+  const [selectedEntryIds, setSelectedEntryIds] = useState<Set<string>>(new Set());
+  const [newGroupName, setNewGroupName] = useState("");
+  const [moveTargetId, setMoveTargetId] = useState("");
 
   const children = getChildren(categories, category.id);
   const subtreeIds = new Set(getSubtreeIds(categories, category.id));
@@ -56,6 +63,11 @@ export function CategoryNode({
   );
   const color = categoryColorVar(category.id, orderedIds);
   const splitGroups = groupEntriesForSplit(ownEntries);
+
+  /** Everywhere this category could move to without creating a cycle: the whole tree minus its own subtree. */
+  const reparentTargets = flattenTree(categories).filter((t) => !subtreeIds.has(t.category.id));
+  /** Existing subcategories the currently selected entries could be grouped into. */
+  const groupTargets = flattenTree(categories).filter((t) => t.category.id !== category.id);
 
   function commitRename() {
     const trimmed = nameDraft.trim();
@@ -95,6 +107,37 @@ export function CategoryNode({
     const restNote = rest > 0 ? `\n\nОстальные ${rest} трат(ы) останутся в «${category.name}» без изменений.` : "";
     const message = `Будут созданы подкатегории:\n${lines}${restNote}\n\nПродолжить?`;
     if (confirm(message)) onSplitIntoSubcategories(category.id);
+  }
+
+  function toggleEntrySelected(id: string) {
+    setSelectedEntryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedEntryIds(new Set());
+    setNewGroupName("");
+    setMoveTargetId("");
+  }
+
+  function handleCreateGroup(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = newGroupName.trim();
+    if (!trimmed || selectedEntryIds.size === 0) return;
+    const newCategory = onAddCategory(trimmed, category.id);
+    onMoveEntriesToCategory([...selectedEntryIds], newCategory.id);
+    clearSelection();
+    setIsOpen(true);
+  }
+
+  function handleMoveToExisting() {
+    if (!moveTargetId || selectedEntryIds.size === 0) return;
+    onMoveEntriesToCategory([...selectedEntryIds], moveTargetId);
+    clearSelection();
   }
 
   return (
@@ -164,8 +207,16 @@ export function CategoryNode({
             ownEntries.map((entry) => {
               const converted = convert(entry.amount, entry.currency, displayCurrency, rates ?? {});
               const showConverted = entry.currency !== displayCurrency;
+              const checked = selectedEntryIds.has(entry.id);
               return (
-                <div className="entry-row" key={entry.id}>
+                <div className={`entry-row${checked ? " is-selected" : ""}`} key={entry.id}>
+                  <input
+                    type="checkbox"
+                    className="entry-checkbox"
+                    aria-label={`Выбрать «${entry.name}»`}
+                    checked={checked}
+                    onChange={() => toggleEntrySelected(entry.id)}
+                  />
                   <span className="entry-name">{entry.name}</span>
                   <span>
                     <span className="entry-amount">{formatAmount(entry.amount, entry.currency)}</span>
@@ -186,6 +237,43 @@ export function CategoryNode({
             })
           )}
 
+          {selectedEntryIds.size > 0 && (
+            <div className="selection-toolbar">
+              <span className="selection-count">Выбрано: {selectedEntryIds.size}</span>
+              <form className="selection-action" onSubmit={handleCreateGroup}>
+                <input
+                  className="input"
+                  placeholder="Новая подкатегория (например «Транспорт»)"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                />
+                <button type="submit" className="btn btn-sm btn-primary" disabled={!newGroupName.trim()}>
+                  Сгруппировать
+                </button>
+              </form>
+              <div className="selection-action">
+                <select
+                  className="select"
+                  value={moveTargetId}
+                  onChange={(e) => setMoveTargetId(e.target.value)}
+                >
+                  <option value="">— выбрать подкатегорию —</option>
+                  {groupTargets.map((t) => (
+                    <option key={t.category.id} value={t.category.id}>
+                      {"—".repeat(t.depth)} {t.category.name}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="btn btn-sm" disabled={!moveTargetId} onClick={handleMoveToExisting}>
+                  Перенести
+                </button>
+              </div>
+              <button type="button" className="link-btn" onClick={clearSelection}>
+                Отменить выбор
+              </button>
+            </div>
+          )}
+
           {children.length > 0 && (
             <div className="subcategories">
               {children.map((child) => (
@@ -203,6 +291,8 @@ export function CategoryNode({
                   onAddCategory={onAddCategory}
                   onEditCategory={onEditCategory}
                   onSplitIntoSubcategories={onSplitIntoSubcategories}
+                  onMoveCategory={onMoveCategory}
+                  onMoveEntriesToCategory={onMoveEntriesToCategory}
                 />
               ))}
             </div>
@@ -245,6 +335,25 @@ export function CategoryNode({
                 + Подкатегория
               </button>
             )}
+          </div>
+
+          <div className="entry-row move-category-row">
+            <label className="hint" htmlFor={`move-cat-${category.id}`}>
+              Переместить категорию в:
+            </label>
+            <select
+              id={`move-cat-${category.id}`}
+              className="select"
+              value={category.parentId ?? ""}
+              onChange={(e) => onMoveCategory(category.id, e.target.value || null)}
+            >
+              <option value="">— Корень —</option>
+              {reparentTargets.map((t) => (
+                <option key={t.category.id} value={t.category.id}>
+                  {"—".repeat(t.depth)} {t.category.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="entry-row">
