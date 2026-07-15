@@ -1,9 +1,11 @@
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import type { Category, Entry } from "../types";
 import { convert } from "../lib/exchangeRates";
 import { categoryColorVar } from "../lib/colors";
 import { formatAmount } from "../lib/format";
 import { getChildren, getSubtreeIds } from "../lib/categoryTree";
+import { groupEntriesForSplit } from "../lib/autoGroup";
 import { CategoryBreakdown } from "./CategoryBreakdown";
 
 interface Props {
@@ -18,6 +20,7 @@ interface Props {
   onDeleteCategory: (id: string) => void;
   onAddCategory: (name: string, parentId: string | null) => Category;
   onEditCategory: (id: string, name: string) => void;
+  onSplitIntoSubcategories: (categoryId: string) => void;
 }
 
 export function CategoryNode({
@@ -32,6 +35,7 @@ export function CategoryNode({
   onDeleteCategory,
   onAddCategory,
   onEditCategory,
+  onSplitIntoSubcategories,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -51,6 +55,7 @@ export function CategoryNode({
     0,
   );
   const color = categoryColorVar(category.id, orderedIds);
+  const splitGroups = groupEntriesForSplit(ownEntries);
 
   function commitRename() {
     const trimmed = nameDraft.trim();
@@ -83,12 +88,21 @@ export function CategoryNode({
     if (confirm(message)) onDeleteCategory(category.id);
   }
 
+  function handleSplit() {
+    const lines = splitGroups.map((g) => `• ${g.label} (${g.entries.length})`).join("\n");
+    const groupedCount = splitGroups.reduce((sum, g) => sum + g.entries.length, 0);
+    const rest = ownEntries.length - groupedCount;
+    const restNote = rest > 0 ? `\n\nОстальные ${rest} трат(ы) останутся в «${category.name}» без изменений.` : "";
+    const message = `Будут созданы подкатегории:\n${lines}${restNote}\n\nПродолжить?`;
+    if (confirm(message)) onSplitIntoSubcategories(category.id);
+  }
+
   return (
     <div className="category-card">
       <div className="category-card-head">
         {isEditingName ? (
           <>
-            <span className="category-dot" style={{ background: color }} />
+            <span className="category-dot" style={{ "--accent": color } as CSSProperties} />
             <input
               className="input category-name-input"
               autoFocus
@@ -118,7 +132,7 @@ export function CategoryNode({
               onClick={() => setIsOpen((v) => !v)}
             >
               <span className="chevron">▶</span>
-              <span className="category-dot" style={{ background: color }} />
+              <span className="category-dot" style={{ "--accent": color } as CSSProperties} />
               <span className="name">{category.name}</span>
               <span className="count">{subtreeEntries.length}</span>
               <span className="total">{formatAmount(total, displayCurrency)}</span>
@@ -138,8 +152,8 @@ export function CategoryNode({
         )}
       </div>
 
-      {isOpen && (
-        <div className="entry-list">
+      <div className={`entry-list${isOpen ? " is-open" : ""}`}>
+        <div className="entry-list-inner">
           <CategoryBreakdown entries={ownEntries} displayCurrency={displayCurrency} rates={rates} color={color} />
 
           {ownEntries.length === 0 && children.length === 0 ? (
@@ -188,8 +202,17 @@ export function CategoryNode({
                   onDeleteCategory={onDeleteCategory}
                   onAddCategory={onAddCategory}
                   onEditCategory={onEditCategory}
+                  onSplitIntoSubcategories={onSplitIntoSubcategories}
                 />
               ))}
+            </div>
+          )}
+
+          {splitGroups.length > 0 && (
+            <div className="entry-row">
+              <button type="button" className="link-btn" onClick={handleSplit}>
+                Разложить по подкатегориям
+              </button>
             </div>
           )}
 
@@ -230,7 +253,7 @@ export function CategoryNode({
             </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

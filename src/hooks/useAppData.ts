@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { AppData, Category, Entry, Settings } from "../types";
 import { loadData, makeId, saveData } from "../lib/storage";
 import { getSubtreeIds } from "../lib/categoryTree";
+import { groupEntriesForSplit } from "../lib/autoGroup";
 
 export function useAppData() {
   const [data, setData] = useState<AppData>(() => loadData());
@@ -56,6 +57,34 @@ export function useAppData() {
     });
   }, []);
 
+  /** Groups a category's own entries by name (stripping trailing numbers) into new subcategories. */
+  const splitIntoSubcategories = useCallback((categoryId: string) => {
+    setData((d) => {
+      const direct = d.entries.filter((e) => e.categoryId === categoryId);
+      const groups = groupEntriesForSplit(direct);
+      if (groups.length === 0) return d;
+
+      const newCategories: Category[] = groups.map((g) => ({
+        id: makeId(),
+        name: g.label,
+        parentId: categoryId,
+      }));
+      const reassign = new Map<string, string>();
+      groups.forEach((g, i) => {
+        for (const e of g.entries) reassign.set(e.id, newCategories[i].id);
+      });
+
+      return {
+        ...d,
+        categories: [...d.categories, ...newCategories],
+        entries: d.entries.map((e) => {
+          const newCategoryId = reassign.get(e.id);
+          return newCategoryId ? { ...e, categoryId: newCategoryId } : e;
+        }),
+      };
+    });
+  }, []);
+
   const replaceAll = useCallback((next: AppData) => {
     setData(next);
   }, []);
@@ -72,6 +101,7 @@ export function useAppData() {
     addEntry,
     deleteEntry,
     deleteCategory,
+    splitIntoSubcategories,
     replaceAll,
     resetAll,
   };

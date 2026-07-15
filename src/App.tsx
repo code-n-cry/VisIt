@@ -19,6 +19,7 @@ function App() {
     addEntry,
     deleteEntry,
     deleteCategory,
+    splitIntoSubcategories,
     replaceAll,
     resetAll,
   } = useAppData();
@@ -65,37 +66,43 @@ function App() {
 
       {importError && <p className="error-text">{importError}</p>}
 
-      <QuickAddForm
-        categories={data.categories}
-        displayCurrency={displayCurrency}
-        onAddCategory={addCategory}
-        onAddEntry={addEntry}
-      />
+      <div className="layout-grid">
+        <div className="sidebar-col">
+          <QuickAddForm
+            categories={data.categories}
+            displayCurrency={displayCurrency}
+            onAddCategory={addCategory}
+            onAddEntry={addEntry}
+          />
+          <CurrencyConverter defaultTo={displayCurrency} />
+        </div>
 
-      <CategoryChart
-        categories={data.categories}
-        entries={data.entries}
-        displayCurrency={displayCurrency}
-        rates={rates}
-      />
-
-      {data.categories.length > 0 && (
-        <div className="stack">
-          <div className="section-title">Категории</div>
-          <CategoryList
+        <div className="main-col">
+          <CategoryChart
             categories={data.categories}
             entries={data.entries}
             displayCurrency={displayCurrency}
             rates={rates}
-            onDeleteEntry={deleteEntry}
-            onDeleteCategory={deleteCategory}
-            onAddCategory={addCategory}
-            onEditCategory={editCategory}
           />
-        </div>
-      )}
 
-      <CurrencyConverter defaultTo={displayCurrency} />
+          {data.categories.length > 0 && (
+            <div className="stack">
+              <div className="section-title">Категории</div>
+              <CategoryList
+                categories={data.categories}
+                entries={data.entries}
+                displayCurrency={displayCurrency}
+                rates={rates}
+                onDeleteEntry={deleteEntry}
+                onDeleteCategory={deleteCategory}
+                onAddCategory={addCategory}
+                onEditCategory={editCategory}
+                onSplitIntoSubcategories={splitIntoSubcategories}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

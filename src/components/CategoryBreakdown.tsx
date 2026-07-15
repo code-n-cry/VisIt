@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { CSSProperties } from "react";
 import type { Entry } from "../types";
 import { convert } from "../lib/exchangeRates";
 import { formatAmount } from "../lib/format";
@@ -48,7 +49,7 @@ export function CategoryBreakdown({ entries, displayCurrency, rates, color }: Pr
             <div className="bar-track bar-track--sub">
               <div
                 className="bar-fill bar-fill--sub"
-                style={{ width: `${Math.max(pct, 2)}%`, background: color }}
+                style={{ width: `${Math.max(pct, 2)}%`, "--bar-color": color } as CSSProperties}
               />
             </div>
             <div className="bar-value">

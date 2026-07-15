@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import type { Category, Entry } from "../types";
 import { convert } from "../lib/exchangeRates";
 import { categoryColorVar } from "../lib/colors";
@@ -113,7 +114,7 @@ export function CategoryChart({ categories, entries, displayCurrency, rates }: P
                     role="img"
                     aria-label={`${t.category.name}: ${formatAmount(t.total, displayCurrency)}`}
                     tabIndex={0}
-                    style={{ width: `${widthPct}%`, background: color }}
+                    style={{ width: `${widthPct}%`, "--bar-color": color } as CSSProperties}
                     onPointerEnter={(e) =>
                       setTooltip({
                         x: e.clientX,
