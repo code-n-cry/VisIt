@@ -4,15 +4,21 @@ import { useAppData } from "./hooks/useAppData";
 import { useExchangeRates } from "./hooks/useExchangeRates";
 import { Onboarding } from "./components/Onboarding";
 import { Header } from "./components/Header";
+import { AccountPanel } from "./components/AccountPanel";
 import { QuickAddForm } from "./components/QuickAddForm";
 import { CategoryChart } from "./components/CategoryChart";
 import { CategoryList } from "./components/CategoryList";
 import { CurrencyConverter } from "./components/CurrencyConverter";
 import { exportDataAsJson, parseImportedJson } from "./lib/storage";
+import { useAuth } from "./hooks/useAuth";
 
 function App() {
+  const auth = useAuth();
   const {
     data,
+    syncStatus,
+    syncError,
+    cloudUpdatedAt,
     setSettings,
     addCategory,
     editCategory,
@@ -24,14 +30,25 @@ function App() {
     splitIntoSubcategories,
     replaceAll,
     resetAll,
-  } = useAppData();
+    syncNow,
+  } = useAppData(auth.user?.id ?? null);
   const [importError, setImportError] = useState<string | null>(null);
 
   const displayCurrency = data.settings?.displayCurrency ?? "USD";
   const { rates } = useExchangeRates(displayCurrency);
 
   if (!data.settings) {
-    return <Onboarding onDone={setSettings} />;
+    return (
+      <Onboarding onDone={setSettings}>
+        <AccountPanel
+          auth={auth}
+          syncStatus={syncStatus}
+          syncError={syncError}
+          cloudUpdatedAt={cloudUpdatedAt}
+          onSyncNow={syncNow}
+        />
+      </Onboarding>
+    );
   }
 
   function handleExport() {
@@ -70,6 +87,13 @@ function App() {
 
       <div className="layout-grid">
         <div className="sidebar-col">
+          <AccountPanel
+            auth={auth}
+            syncStatus={syncStatus}
+            syncError={syncError}
+            cloudUpdatedAt={cloudUpdatedAt}
+            onSyncNow={syncNow}
+          />
           <QuickAddForm
             categories={data.categories}
             displayCurrency={displayCurrency}
@@ -87,24 +111,22 @@ function App() {
             rates={rates}
           />
 
-          {data.categories.length > 0 && (
-            <div className="stack">
-              <div className="section-title">Категории</div>
-              <CategoryList
-                categories={data.categories}
-                entries={data.entries}
-                displayCurrency={displayCurrency}
-                rates={rates}
-                onDeleteEntry={deleteEntry}
-                onDeleteCategory={deleteCategory}
-                onAddCategory={addCategory}
-                onEditCategory={editCategory}
-                onSplitIntoSubcategories={splitIntoSubcategories}
-                onMoveCategory={moveCategory}
-                onMoveEntriesToCategory={moveEntriesToCategory}
-              />
-            </div>
-          )}
+          <div className="stack">
+            <div className="section-title">Категории</div>
+            <CategoryList
+              categories={data.categories}
+              entries={data.entries}
+              displayCurrency={displayCurrency}
+              rates={rates}
+              onDeleteEntry={deleteEntry}
+              onDeleteCategory={deleteCategory}
+              onAddCategory={addCategory}
+              onEditCategory={editCategory}
+              onSplitIntoSubcategories={splitIntoSubcategories}
+              onMoveCategory={moveCategory}
+              onMoveEntriesToCategory={moveEntriesToCategory}
+            />
+          </div>
         </div>
       </div>
     </div>

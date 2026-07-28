@@ -1,3 +1,5 @@
+import { useState } from "react";
+import type { FormEvent } from "react";
 import type { Category, Entry } from "../types";
 import { CategoryNode } from "./CategoryNode";
 
@@ -28,13 +30,39 @@ export function CategoryList({
   onMoveCategory,
   onMoveEntriesToCategory,
 }: Props) {
+  const [newCategoryName, setNewCategoryName] = useState("");
   const orderedIds = categories.map((c) => c.id);
   const topLevel = categories.filter((c) => c.parentId === null);
 
-  if (topLevel.length === 0) return null;
+  function submitTopLevelCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+    onAddCategory(trimmed, null);
+    setNewCategoryName("");
+  }
 
   return (
     <div className="category-list">
+      <form className="category-create-form" onSubmit={submitTopLevelCategory}>
+        <input
+          className="input"
+          value={newCategoryName}
+          onChange={(event) => setNewCategoryName(event.target.value)}
+          placeholder="Новая категория"
+          aria-label="Название новой категории"
+        />
+        <button type="submit" className="btn btn-sm btn-primary" disabled={!newCategoryName.trim()}>
+          Добавить
+        </button>
+      </form>
+
+      {topLevel.length === 0 && (
+        <div className="category-empty">
+          <span className="hint">Создай первую категорию или добавь трату через форму слева.</span>
+        </div>
+      )}
+
       {topLevel.map((category) => (
         <CategoryNode
           key={category.id}

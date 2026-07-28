@@ -348,6 +348,92 @@
   color: var(--critical);
 }
 
+/* ---------- account ---------- */
+
+.account-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.account-head .card-title {
+  margin-bottom: 0;
+}
+
+.account-email {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.segmented-control {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+
+.segmented-control button {
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.segmented-control button.is-active {
+  color: var(--text-primary);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-sm);
+}
+
+.sync-pill {
+  flex-shrink: 0;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sync-pill--synced {
+  color: var(--good);
+  background: color-mix(in srgb, var(--good) 10%, transparent);
+}
+
+.sync-pill--saving,
+.sync-pill--loading {
+  color: var(--series-1);
+  background: color-mix(in srgb, var(--series-1) 10%, transparent);
+}
+
+.sync-pill--error {
+  color: var(--critical);
+  background: color-mix(in srgb, var(--critical) 10%, transparent);
+}
+
 /* ---------- onboarding ---------- */
 
 .onboarding {
@@ -382,6 +468,12 @@
   flex-direction: column;
   gap: 14px;
   animation-delay: 0.08s;
+}
+
+.onboarding .account-panel {
+  width: 100%;
+  max-width: 340px;
+  text-align: left;
 }
 
 /* ---------- bar chart ---------- */
@@ -543,6 +635,28 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.category-create-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-sm);
+}
+
+.category-create-form .input {
+  min-width: 0;
+}
+
+.category-empty {
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface-1);
 }
 
 .category-card {

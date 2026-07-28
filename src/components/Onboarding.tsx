@@ -1,13 +1,14 @@
 import { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 import logo from "../assets/logo.svg";
 import { CURRENCIES, DEFAULT_CURRENCY } from "../config/currencies";
 import type { Settings } from "../types";
 
-export function Onboarding({ onDone }: { onDone: (settings: Settings) => void }) {
+export function Onboarding({ children, onDone }: { children?: ReactNode; onDone: (settings: Settings) => void }) {
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
 
-  function submit(e: React.FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) return;
@@ -56,6 +57,7 @@ export function Onboarding({ onDone }: { onDone: (settings: Settings) => void })
           Начать
         </button>
       </form>
+      {children}
       <p className="hint">Данные хранятся только в этом браузере, на этом устройстве.</p>
     </div>
   );

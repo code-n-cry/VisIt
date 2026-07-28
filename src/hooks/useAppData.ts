@@ -1,15 +1,105 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppData, Category, Entry, Settings } from "../types";
 import { loadData, makeId, saveData } from "../lib/storage";
+import { loadCloudData, saveCloudData } from "../lib/cloudStorage";
+import { mergeAppData, shouldUploadMergedData } from "../lib/mergeAppData";
 import { getSubtreeIds } from "../lib/categoryTree";
 import { groupEntriesForSplit } from "../lib/autoGroup";
 
-export function useAppData() {
+export type SyncStatus = "local" | "loading" | "saving" | "synced" | "error";
+
+export function useAppData(userId: string | null) {
   const [data, setData] = useState<AppData>(() => loadData());
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(userId ? "loading" : "local");
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [cloudUpdatedAt, setCloudUpdatedAt] = useState<string | null>(null);
+  const hydratedUserRef = useRef<string | null>(null);
+  const latestDataRef = useRef(data);
 
   useEffect(() => {
+    latestDataRef.current = data;
     saveData(data);
   }, [data]);
+
+  useEffect(() => {
+    if (!userId) {
+      hydratedUserRef.current = null;
+      setSyncStatus("local");
+      setSyncError(null);
+      setCloudUpdatedAt(null);
+      return;
+    }
+
+    let cancelled = false;
+    setSyncStatus("loading");
+    setSyncError(null);
+
+    loadCloudData(userId)
+      .then((remote) => {
+        if (cancelled) return;
+
+        hydratedUserRef.current = userId;
+        if (remote) {
+          const localData = latestDataRef.current;
+          const mergedData = mergeAppData(localData, remote.data);
+          setData(mergedData);
+          saveData(mergedData);
+
+          if (shouldUploadMergedData(localData, remote.data)) {
+            return saveCloudData(userId, mergedData).then((updatedAt) => {
+              if (cancelled) return;
+              setCloudUpdatedAt(updatedAt);
+              setSyncStatus("synced");
+            });
+          }
+
+          setCloudUpdatedAt(remote.updatedAt);
+          setSyncStatus("synced");
+          return;
+        }
+
+        return saveCloudData(userId, latestDataRef.current).then((updatedAt) => {
+          if (cancelled) return;
+          setCloudUpdatedAt(updatedAt);
+          setSyncStatus("synced");
+        });
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setSyncStatus("error");
+        setSyncError(err instanceof Error ? err.message : "Не удалось загрузить данные аккаунта");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId || hydratedUserRef.current !== userId) return;
+
+    let cancelled = false;
+    setSyncStatus("saving");
+    const timeoutId = window.setTimeout(() => {
+      saveCloudData(userId, data)
+        .then((updatedAt) => {
+          if (cancelled) return;
+          setCloudUpdatedAt(updatedAt);
+          setSyncStatus("synced");
+          setSyncError(null);
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          setSyncStatus("error");
+          setSyncError(err instanceof Error ? err.message : "Не удалось сохранить данные аккаунта");
+        });
+    }, 600);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [data, userId]);
 
   const setSettings = useCallback((settings: Settings) => {
     setData((d) => ({ ...d, settings }));
@@ -115,8 +205,25 @@ export function useAppData() {
     setData({ settings: null, categories: [], entries: [] });
   }, []);
 
+  const syncNow = useCallback(async () => {
+    if (!userId) return;
+    setSyncStatus("saving");
+    setSyncError(null);
+    try {
+      const updatedAt = await saveCloudData(userId, latestDataRef.current);
+      setCloudUpdatedAt(updatedAt);
+      setSyncStatus("synced");
+    } catch (err) {
+      setSyncStatus("error");
+      setSyncError(err instanceof Error ? err.message : "Не удалось сохранить данные аккаунта");
+    }
+  }, [userId]);
+
   return {
     data,
+    syncStatus,
+    syncError,
+    cloudUpdatedAt,
     setSettings,
     addCategory,
     editCategory,
@@ -128,5 +235,6 @@ export function useAppData() {
     splitIntoSubcategories,
     replaceAll,
     resetAll,
+    syncNow,
   };
 }
