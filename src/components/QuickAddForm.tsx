@@ -1,24 +1,41 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Category } from "../types";
+import type { Category, Group } from "../types";
 import { CURRENCIES } from "../config/currencies";
 import { flattenTree } from "../lib/categoryTree";
 
 const NEW_CATEGORY = "__new__";
+const NO_GROUP = "__none__";
 
 interface Props {
   categories: Category[];
+  groups: Group[];
+  selectedGroupId: string | null;
   displayCurrency: string;
   onAddCategory: (name: string) => Category;
-  onAddEntry: (entry: { categoryId: string; name: string; amount: number; currency: string }) => void;
+  onAddEntry: (entry: {
+    categoryId: string;
+    groupId: string | null;
+    name: string;
+    amount: number;
+    currency: string;
+  }) => void;
 }
 
-export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAddEntry }: Props) {
+export function QuickAddForm({
+  categories,
+  groups,
+  selectedGroupId,
+  displayCurrency,
+  onAddCategory,
+  onAddEntry,
+}: Props) {
   const flatCategories = useMemo(() => flattenTree(categories), [categories]);
   const [categoryId, setCategoryId] = useState<string>(flatCategories[0]?.category.id ?? NEW_CATEGORY);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [itemName, setItemName] = useState("");
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState(displayCurrency);
+  const [groupId, setGroupId] = useState<string>(selectedGroupId || NO_GROUP);
   const [error, setError] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -28,6 +45,10 @@ export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAdd
       setCategoryId(flatCategories[0]?.category.id ?? NEW_CATEGORY);
     }
   }, [categories, categoryId, flatCategories]);
+
+  useEffect(() => {
+    setGroupId(selectedGroupId || NO_GROUP);
+  }, [selectedGroupId]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,9 +76,15 @@ export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAdd
       return;
     }
 
-    onAddEntry({ categoryId: targetCategoryId, name: trimmedName, amount: parsedAmount, currency });
+    onAddEntry({
+      categoryId: targetCategoryId,
+      groupId: groupId === NO_GROUP ? null : groupId,
+      name: trimmedName,
+      amount: parsedAmount,
+      currency,
+    });
 
-    // Stay on the same category/currency so several expenses in a row are fast to enter.
+    // Stay on the same category/currency/group so several expenses in a row are fast to enter.
     setCategoryId(targetCategoryId);
     setNewCategoryName("");
     setItemName("");
@@ -79,7 +106,7 @@ export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAdd
         >
           {flatCategories.map(({ category: c, depth }) => (
             <option key={c.id} value={c.id}>
-              {depth > 0 ? `${"  ".repeat(depth)}↳ ${c.name}` : c.name}
+              {depth > 0 ? `${"  ".repeat(depth)}↳ ${c.name}` : c.name}
             </option>
           ))}
           <option value={NEW_CATEGORY}>+ Новая категория</option>
@@ -98,6 +125,18 @@ export function QuickAddForm({ categories, displayCurrency, onAddCategory, onAdd
           />
         </div>
       )}
+
+      <div className="field">
+        <label htmlFor="group">Группа</label>
+        <select id="group" className="select" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+          <option value={NO_GROUP}>Без группы</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="row">
         <div className="field">

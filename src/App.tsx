@@ -5,7 +5,10 @@ import { useExchangeRates } from "./hooks/useExchangeRates";
 import { Onboarding } from "./components/Onboarding";
 import { Header } from "./components/Header";
 import { AccountPanel } from "./components/AccountPanel";
+import { GroupManager } from "./components/GroupManager";
 import { QuickAddForm } from "./components/QuickAddForm";
+import { BudgetCard } from "./components/BudgetCard";
+import { StatsCard } from "./components/StatsCard";
 import { CategoryChart } from "./components/CategoryChart";
 import { CategoryList } from "./components/CategoryList";
 import { CurrencyConverter } from "./components/CurrencyConverter";
@@ -20,6 +23,9 @@ function App() {
     syncError,
     cloudUpdatedAt,
     setSettings,
+    addGroup,
+    editGroup,
+    deleteGroup,
     addCategory,
     editCategory,
     addEntry,
@@ -33,9 +39,15 @@ function App() {
     syncNow,
   } = useAppData(auth.user?.id ?? null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   const displayCurrency = data.settings?.displayCurrency ?? "USD";
   const { rates } = useExchangeRates(displayCurrency);
+
+  const displayEntries =
+    selectedGroupId === null
+      ? data.entries
+      : data.entries.filter((e) => e.groupId === selectedGroupId);
 
   if (!data.settings) {
     return (
@@ -72,6 +84,13 @@ function App() {
     }
   }
 
+  function handleDeleteGroup(id: string) {
+    if (selectedGroupId === id) {
+      setSelectedGroupId(null);
+    }
+    deleteGroup(id);
+  }
+
   return (
     <div className="app">
       <Header
@@ -94,19 +113,43 @@ function App() {
             cloudUpdatedAt={cloudUpdatedAt}
             onSyncNow={syncNow}
           />
+          <GroupManager
+            groups={data.groups}
+            selectedGroupId={selectedGroupId}
+            onSelect={setSelectedGroupId}
+            onAdd={addGroup}
+            onEdit={editGroup}
+            onDelete={handleDeleteGroup}
+          />
           <QuickAddForm
             categories={data.categories}
+            groups={data.groups}
+            selectedGroupId={selectedGroupId}
             displayCurrency={displayCurrency}
             onAddCategory={addCategory}
             onAddEntry={addEntry}
           />
+          <BudgetCard
+            settings={data.settings}
+            entries={data.entries}
+            rates={rates}
+            onUpdateSettings={setSettings}
+          />
           <CurrencyConverter defaultTo={displayCurrency} />
+          <StatsCard
+            entries={data.entries}
+            categories={data.categories}
+            groups={data.groups}
+            selectedGroupId={selectedGroupId}
+            displayCurrency={displayCurrency}
+            rates={rates}
+          />
         </div>
 
         <div className="main-col">
           <CategoryChart
             categories={data.categories}
-            entries={data.entries}
+            entries={displayEntries}
             displayCurrency={displayCurrency}
             rates={rates}
           />
@@ -115,7 +158,7 @@ function App() {
             <div className="section-title">Категории</div>
             <CategoryList
               categories={data.categories}
-              entries={data.entries}
+              entries={displayEntries}
               displayCurrency={displayCurrency}
               rates={rates}
               onDeleteEntry={deleteEntry}

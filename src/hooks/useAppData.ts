@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AppData, Category, Entry, Settings } from "../types";
+import type { AppData, Category, Entry, Group, Settings } from "../types";
 import { loadData, makeId, saveData } from "../lib/storage";
 import { loadCloudData, saveCloudData } from "../lib/cloudStorage";
 import { mergeAppData, shouldUploadMergedData } from "../lib/mergeAppData";
@@ -105,6 +105,29 @@ export function useAppData(userId: string | null) {
     setData((d) => ({ ...d, settings }));
   }, []);
 
+  const addGroup = useCallback((name: string): Group => {
+    const group: Group = { id: makeId(), name: name.trim() };
+    setData((d) => ({ ...d, groups: [...d.groups, group] }));
+    return group;
+  }, []);
+
+  const editGroup = useCallback((id: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setData((d) => ({
+      ...d,
+      groups: d.groups.map((g) => (g.id === id ? { ...g, name: trimmed } : g)),
+    }));
+  }, []);
+
+  const deleteGroup = useCallback((id: string) => {
+    setData((d) => ({
+      ...d,
+      groups: d.groups.filter((g) => g.id !== id),
+      entries: d.entries.map((e) => (e.groupId === id ? { ...e, groupId: null } : e)),
+    }));
+  }, []);
+
   const addCategory = useCallback((name: string, parentId: string | null = null): Category => {
     const category: Category = { id: makeId(), name: name.trim(), parentId };
     setData((d) => ({ ...d, categories: [...d.categories, category] }));
@@ -202,7 +225,7 @@ export function useAppData(userId: string | null) {
   }, []);
 
   const resetAll = useCallback(() => {
-    setData({ settings: null, categories: [], entries: [] });
+    setData({ settings: null, groups: [], categories: [], entries: [] });
   }, []);
 
   const syncNow = useCallback(async () => {
@@ -225,6 +248,9 @@ export function useAppData(userId: string | null) {
     syncError,
     cloudUpdatedAt,
     setSettings,
+    addGroup,
+    editGroup,
+    deleteGroup,
     addCategory,
     editCategory,
     addEntry,

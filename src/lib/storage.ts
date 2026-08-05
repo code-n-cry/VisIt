@@ -1,4 +1,4 @@
-import type { AppData, Category, Entry, Settings } from "../types";
+import type { AppData, Category, Entry, Group, Settings } from "../types";
 import { DEFAULT_CATEGORIES } from "../config/categories";
 
 const STORAGE_KEY = "visit:data:v1";
@@ -10,6 +10,7 @@ function makeId(): string {
 function emptyData(): AppData {
   return {
     settings: null,
+    groups: [],
     categories: DEFAULT_CATEGORIES.map((name) => ({ id: makeId(), name, parentId: null })),
     entries: [],
   };
@@ -20,6 +21,11 @@ function migrateCategories(categories: Category[] | undefined): Category[] {
   return (categories ?? []).map((c) => ({ ...c, parentId: c.parentId ?? null }));
 }
 
+/** Older saves predate groups. */
+function migrateEntries(entries: Entry[] | undefined): Entry[] {
+  return (entries ?? []).map((e) => ({ ...e, groupId: e.groupId ?? null }));
+}
+
 export function loadData(): AppData {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return emptyData();
@@ -27,8 +33,9 @@ export function loadData(): AppData {
     const parsed = JSON.parse(raw) as AppData;
     return {
       settings: parsed.settings ?? null,
+      groups: parsed.groups ?? [],
       categories: migrateCategories(parsed.categories),
-      entries: parsed.entries ?? [],
+      entries: migrateEntries(parsed.entries),
     };
   } catch {
     return emptyData();
@@ -50,8 +57,9 @@ export function parseImportedJson(text: string): AppData {
   }
   return {
     settings: (parsed.settings as Settings) ?? null,
+    groups: (parsed.groups as Group[]) ?? [],
     categories: migrateCategories(parsed.categories as Category[]),
-    entries: parsed.entries as Entry[],
+    entries: migrateEntries(parsed.entries as Entry[]),
   };
 }
 
