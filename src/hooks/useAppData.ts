@@ -151,11 +151,11 @@ export function useAppData(userId: string | null) {
   }, []);
 
   const addEntry = useCallback(
-    (entry: Omit<Entry, "id" | "createdAt">) => {
+    (entry: Omit<Entry, "id" | "createdAt"> & { createdAt?: string }) => {
       const full: Entry = {
         ...entry,
         id: makeId(),
-        createdAt: new Date().toISOString(),
+        createdAt: entry.createdAt ?? new Date().toISOString(),
       };
       setData((d) => ({ ...d, entries: [...d.entries, full] }));
     },

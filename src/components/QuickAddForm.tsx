@@ -18,7 +18,14 @@ interface Props {
     name: string;
     amount: number;
     currency: string;
+    createdAt?: string;
   }) => void;
+}
+
+function todayInputValue() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
 export function QuickAddForm({
@@ -36,6 +43,7 @@ export function QuickAddForm({
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState(displayCurrency);
   const [groupId, setGroupId] = useState<string>(selectedGroupId || NO_GROUP);
+  const [date, setDate] = useState(todayInputValue);
   const [error, setError] = useState<string | null>(null);
   const [bannedNotice, setBannedNotice] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -93,6 +101,10 @@ export function QuickAddForm({
       setError("Сумма должна быть больше нуля");
       return;
     }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(new Date(`${date}T12:00:00Z`).getTime())) {
+      setError("Укажите корректную дату траты");
+      return;
+    }
 
     onAddEntry({
       categoryId: targetCategoryId,
@@ -100,6 +112,8 @@ export function QuickAddForm({
       name: trimmedName,
       amount: parsedAmount,
       currency,
+      // Keep the selected calendar day stable in every timezone.
+      createdAt: `${date}T12:00:00.000Z`,
     });
 
     if (targetCategory?.banned) {
@@ -163,6 +177,17 @@ export function QuickAddForm({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="field">
+        <label htmlFor="entry-date">Дата траты</label>
+        <input
+          id="entry-date"
+          className="input"
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
       </div>
 
       <div className="row">
