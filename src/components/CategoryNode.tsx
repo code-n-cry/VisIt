@@ -17,6 +17,7 @@ interface Props {
   orderedIds: string[];
   depth: number;
   onDeleteEntry: (id: string) => void;
+  onUpdateEntry: (id: string, updates: Partial<Omit<Entry, "id">>) => void;
   onDeleteCategory: (id: string) => void;
   onAddCategory: (name: string, parentId: string | null) => Category;
   onEditCategory: (id: string, name: string) => void;
@@ -35,6 +36,7 @@ export function CategoryNode({
   orderedIds,
   depth,
   onDeleteEntry,
+  onUpdateEntry,
   onDeleteCategory,
   onAddCategory,
   onEditCategory,
@@ -51,6 +53,8 @@ export function CategoryNode({
   const [selectedEntryIds, setSelectedEntryIds] = useState<Set<string>>(new Set());
   const [newGroupName, setNewGroupName] = useState("");
   const [moveTargetId, setMoveTargetId] = useState("");
+  const [editingEntryDateId, setEditingEntryDateId] = useState<string | null>(null);
+  const [entryDateDraft, setEntryDateDraft] = useState("");
 
   const children = getChildren(categories, category.id);
   const subtreeIds = new Set(getSubtreeIds(categories, category.id));
@@ -142,6 +146,17 @@ export function CategoryNode({
     clearSelection();
   }
 
+  function startEditingEntryDate(entry: Entry) {
+    setEditingEntryDateId(entry.id);
+    setEntryDateDraft(entry.createdAt.slice(0, 10));
+  }
+
+  function saveEntryDate(entryId: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(entryDateDraft)) return;
+    onUpdateEntry(entryId, { createdAt: `${entryDateDraft}T12:00:00.000Z` });
+    setEditingEntryDateId(null);
+  }
+
   return (
     <div className={`category-card${category.banned ? " category-card--banned" : ""}`}>
       <div className="category-card-head">
@@ -230,6 +245,33 @@ export function CategoryNode({
                     onChange={() => toggleEntrySelected(entry.id)}
                   />
                   <span className="entry-name">{entry.name}</span>
+                  {editingEntryDateId === entry.id ? (
+                    <span className="entry-date-editor">
+                      <input
+                        className="input entry-date-input"
+                        type="date"
+                        aria-label={`Дата траты «${entry.name}»`}
+                        value={entryDateDraft}
+                        onChange={(e) => setEntryDateDraft(e.target.value)}
+                      />
+                      <button type="button" className="icon-btn-sm" aria-label="Сохранить дату" onClick={() => saveEntryDate(entry.id)}>
+                        ✓
+                      </button>
+                      <button type="button" className="icon-btn-sm" aria-label="Отменить изменение даты" onClick={() => setEditingEntryDateId(null)}>
+                        ✕
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="entry-date"
+                      aria-label={`Изменить дату траты «${entry.name}»`}
+                      title="Изменить дату"
+                      onClick={() => startEditingEntryDate(entry)}
+                    >
+                      {new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(entry.createdAt))}
+                    </button>
+                  )}
                   <span>
                     <span className="entry-amount">{formatAmount(entry.amount, entry.currency)}</span>
                     {showConverted && (
@@ -299,6 +341,7 @@ export function CategoryNode({
                   orderedIds={orderedIds}
                   depth={depth + 1}
                   onDeleteEntry={onDeleteEntry}
+                  onUpdateEntry={onUpdateEntry}
                   onDeleteCategory={onDeleteCategory}
                   onAddCategory={onAddCategory}
                   onEditCategory={onEditCategory}

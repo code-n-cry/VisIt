@@ -35,6 +35,7 @@ function App() {
     addEntry,
     addEntries,
     deleteEntry,
+    updateEntry,
     deleteCategory,
     moveCategory,
     moveEntriesToCategory,
@@ -215,6 +216,7 @@ function App() {
               displayCurrency={displayCurrency}
               rates={rates}
               onDeleteEntry={deleteEntry}
+              onUpdateEntry={updateEntry}
               onDeleteCategory={deleteCategory}
               onAddCategory={addCategory}
               onEditCategory={editCategory}

@@ -176,6 +176,13 @@ export function useAppData(userId: string | null) {
     setData((d) => ({ ...d, entries: d.entries.filter((e) => e.id !== id) }));
   }, []);
 
+  const updateEntry = useCallback((id: string, updates: Partial<Omit<Entry, "id">>) => {
+    setData((d) => ({
+      ...d,
+      entries: d.entries.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry)),
+    }));
+  }, []);
+
   const deleteCategory = useCallback((id: string) => {
     setData((d) => {
       const removedIds = new Set(getSubtreeIds(d.categories, id));
@@ -305,6 +312,7 @@ export function useAppData(userId: string | null) {
     addEntry,
     addEntries,
     deleteEntry,
+    updateEntry,
     deleteCategory,
     moveCategory,
     moveEntriesToCategory,

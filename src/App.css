@@ -1000,6 +1000,34 @@
   gap: 12px;
 }
 
+.entry-date {
+  flex: 0 0 58px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 3px 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.entry-date:hover {
+  color: var(--series-1);
+  text-decoration: underline;
+}
+
+.entry-date-editor {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.entry-date-input {
+  width: 140px;
+  padding: 5px 7px;
+  font-size: 12px;
+}
+
 .group-add-form {
   display: flex;
   gap: 8px;
@@ -1066,6 +1094,20 @@
   gap: 14px;
 }
 
+.budget-hint,
+.budget-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.budget-hint {
+  margin-top: -6px;
+}
+
+.budget-empty {
+  margin-top: -6px;
+}
+
 .budget-row {
   display: flex;
   align-items: center;
@@ -1078,6 +1120,10 @@
   gap: 8px;
   align-items: flex-end;
   flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
 }
 
 .budget-inputs .field {

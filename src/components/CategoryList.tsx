@@ -8,6 +8,7 @@ interface Props {
   displayCurrency: string;
   rates: Record<string, number> | null;
   onDeleteEntry: (id: string) => void;
+  onUpdateEntry: (id: string, updates: Partial<Omit<Entry, "id">>) => void;
   onDeleteCategory: (id: string) => void;
   onAddCategory: (name: string, parentId: string | null) => Category;
   onEditCategory: (id: string, name: string) => void;
@@ -23,6 +24,7 @@ export function CategoryList({
   displayCurrency,
   rates,
   onDeleteEntry,
+  onUpdateEntry,
   onDeleteCategory,
   onAddCategory,
   onEditCategory,
@@ -75,6 +77,7 @@ export function CategoryList({
           orderedIds={orderedIds}
           depth={0}
           onDeleteEntry={onDeleteEntry}
+          onUpdateEntry={onUpdateEntry}
           onDeleteCategory={onDeleteCategory}
           onAddCategory={onAddCategory}
           onEditCategory={onEditCategory}

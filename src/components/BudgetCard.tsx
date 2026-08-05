@@ -78,12 +78,15 @@ export function BudgetCard({ settings, entries, rates, onUpdateSettings }: Props
 
   return (
     <section className="card budget-card">
-      <div className="card-title">Дневной бюджет</div>
+      <div>
+        <div className="card-title">Лимит трат на день</div>
+        <p className="budget-hint">Задайте сумму, которую хотите не превышать за день.</p>
+      </div>
 
       <div className="budget-row">
-        <div className="budget-inputs">
+        <div className="budget-inputs" aria-label="Настройка дневного лимита">
           <div className="field">
-            <label htmlFor="daily-limit">Лимит</label>
+            <label htmlFor="daily-limit">Сумма в день</label>
             <input
               id="daily-limit"
               className="input"
@@ -92,11 +95,11 @@ export function BudgetCard({ settings, entries, rates, onUpdateSettings }: Props
               step={0.01}
               value={settings.dailyLimit ?? ""}
               onChange={handleLimitChange}
-              placeholder="0"
+              placeholder="Например, 1 500"
             />
           </div>
           <div className="field" style={{ flex: "0 0 110px" }}>
-            <label htmlFor="limit-currency">Валюта</label>
+            <label htmlFor="limit-currency">Валюта лимита</label>
             <select id="limit-currency" className="select" value={limitCurrency} onChange={handleCurrencyChange}>
               {CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -132,6 +135,8 @@ export function BudgetCard({ settings, entries, rates, onUpdateSettings }: Props
           <span className="budget-limit">из {formatAmount(limit, limitCurrency)}</span>
         )}
       </div>
+
+      {limit <= 0 && <p className="budget-empty">Введите сумму выше, чтобы начать отслеживать дневной лимит.</p>}
 
       {limit > 0 && (
         <div className="streak-line">
