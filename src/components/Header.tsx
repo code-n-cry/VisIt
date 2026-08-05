@@ -8,12 +8,22 @@ interface Props {
   onChangeCurrency: (code: string) => void;
   onExport: () => void;
   onImport: (file: File) => void;
+  onImportCsv: (file: File) => void;
   onReset: () => void;
 }
 
-export function Header({ userName, displayCurrency, onChangeCurrency, onExport, onImport, onReset }: Props) {
+export function Header({
+  userName,
+  displayCurrency,
+  onChangeCurrency,
+  onExport,
+  onImport,
+  onImportCsv,
+  onReset,
+}: Props) {
   const [open, setOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const csvRef = useRef<HTMLInputElement>(null);
 
   return (
     <header className="header">
@@ -79,6 +89,27 @@ export function Header({ userName, displayCurrency, onChangeCurrency, onExport, 
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) onImport(file);
+                e.target.value = "";
+                setOpen(false);
+              }}
+            />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                csvRef.current?.click();
+              }}
+            >
+              Импорт CSV
+            </button>
+            <input
+              ref={csvRef}
+              type="file"
+              accept=".csv,text/csv"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onImportCsv(file);
                 e.target.value = "";
                 setOpen(false);
               }}

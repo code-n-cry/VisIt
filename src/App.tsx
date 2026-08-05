@@ -8,11 +8,14 @@ import { AccountPanel } from "./components/AccountPanel";
 import { GroupManager } from "./components/GroupManager";
 import { QuickAddForm } from "./components/QuickAddForm";
 import { BudgetCard } from "./components/BudgetCard";
+import { GoalsCard } from "./components/GoalsCard";
 import { StatsCard } from "./components/StatsCard";
+import { SpendingHeatmap } from "./components/SpendingHeatmap";
 import { CategoryChart } from "./components/CategoryChart";
 import { CategoryList } from "./components/CategoryList";
 import { CurrencyConverter } from "./components/CurrencyConverter";
 import { exportDataAsJson, parseImportedJson } from "./lib/storage";
+import { parseBankCsv } from "./lib/csvImport";
 import { useAuth } from "./hooks/useAuth";
 
 function App() {
@@ -28,17 +31,23 @@ function App() {
     deleteGroup,
     addCategory,
     editCategory,
+    toggleCategoryBanned,
     addEntry,
+    addEntries,
     deleteEntry,
     deleteCategory,
     moveCategory,
     moveEntriesToCategory,
     splitIntoSubcategories,
+    addGoal,
+    deleteGoal,
+    contributeToGoal,
     replaceAll,
     resetAll,
     syncNow,
   } = useAppData(auth.user?.id ?? null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   const displayCurrency = data.settings?.displayCurrency ?? "USD";
@@ -75,12 +84,46 @@ function App() {
 
   async function handleImport(file: File) {
     setImportError(null);
+    setImportNotice(null);
     try {
       const text = await file.text();
       const parsed = parseImportedJson(text);
       replaceAll(parsed);
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Не удалось прочитать файл");
+    }
+  }
+
+  async function handleImportCsv(file: File) {
+    setImportError(null);
+    setImportNotice(null);
+    try {
+      const text = await file.text();
+      const rows = parseBankCsv(text, displayCurrency);
+      if (rows.length === 0) {
+        setImportNotice("Не удалось распознать строки в CSV.");
+        return;
+      }
+
+      const entriesToAdd = rows.map((row) => {
+        const existing = data.categories.find(
+          (c) => c.name.toLowerCase() === row.category.toLowerCase(),
+        );
+        const category = existing ?? addCategory(row.category);
+        return {
+          categoryId: category.id,
+          groupId: null as string | null,
+          name: row.name,
+          amount: row.amount,
+          currency: row.currency,
+          createdAt: row.date,
+        };
+      });
+
+      addEntries(entriesToAdd);
+      setImportNotice(`Импортировано ${entriesToAdd.length} трат из CSV.`);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Не удалось прочитать CSV");
     }
   }
 
@@ -99,10 +142,12 @@ function App() {
         onChangeCurrency={(code) => setSettings({ ...data.settings!, displayCurrency: code })}
         onExport={handleExport}
         onImport={handleImport}
+        onImportCsv={handleImportCsv}
         onReset={resetAll}
       />
 
       {importError && <p className="error-text">{importError}</p>}
+      {importNotice && <p className="hint">{importNotice}</p>}
 
       <div className="layout-grid">
         <div className="sidebar-col">
@@ -135,6 +180,12 @@ function App() {
             rates={rates}
             onUpdateSettings={setSettings}
           />
+          <GoalsCard
+            goals={data.goals}
+            onAdd={addGoal}
+            onDelete={deleteGoal}
+            onContribute={contributeToGoal}
+          />
           <CurrencyConverter defaultTo={displayCurrency} />
           <StatsCard
             entries={data.entries}
@@ -154,6 +205,8 @@ function App() {
             rates={rates}
           />
 
+          <SpendingHeatmap entries={data.entries} displayCurrency={displayCurrency} rates={rates} />
+
           <div className="stack">
             <div className="section-title">Категории</div>
             <CategoryList
@@ -165,6 +218,7 @@ function App() {
               onDeleteCategory={deleteCategory}
               onAddCategory={addCategory}
               onEditCategory={editCategory}
+              onToggleBanned={toggleCategoryBanned}
               onSplitIntoSubcategories={splitIntoSubcategories}
               onMoveCategory={moveCategory}
               onMoveEntriesToCategory={moveEntriesToCategory}

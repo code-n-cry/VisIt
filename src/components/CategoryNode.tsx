@@ -20,6 +20,7 @@ interface Props {
   onDeleteCategory: (id: string) => void;
   onAddCategory: (name: string, parentId: string | null) => Category;
   onEditCategory: (id: string, name: string) => void;
+  onToggleBanned: (id: string) => void;
   onSplitIntoSubcategories: (categoryId: string) => void;
   onMoveCategory: (categoryId: string, newParentId: string | null) => void;
   onMoveEntriesToCategory: (entryIds: string[], targetCategoryId: string) => void;
@@ -37,6 +38,7 @@ export function CategoryNode({
   onDeleteCategory,
   onAddCategory,
   onEditCategory,
+  onToggleBanned,
   onSplitIntoSubcategories,
   onMoveCategory,
   onMoveEntriesToCategory,
@@ -141,7 +143,7 @@ export function CategoryNode({
   }
 
   return (
-    <div className="category-card">
+    <div className={`category-card${category.banned ? " category-card--banned" : ""}`}>
       <div className="category-card-head">
         {isEditingName ? (
           <>
@@ -177,8 +179,18 @@ export function CategoryNode({
               <span className="chevron">▶</span>
               <span className="category-dot" style={{ "--accent": color } as CSSProperties} />
               <span className="name">{category.name}</span>
+              {category.banned && <span className="banned-badge">ограничено</span>}
               <span className="count">{subtreeEntries.length}</span>
               <span className="total">{formatAmount(total, displayCurrency)}</span>
+            </button>
+            <button
+              type="button"
+              className={`icon-btn-sm${category.banned ? " icon-btn-sm--active" : ""}`}
+              aria-label={category.banned ? "Снять ограничение" : `Ограничить «${category.name}»`}
+              title={category.banned ? "Снять ограничение" : "Ограничить траты"}
+              onClick={() => onToggleBanned(category.id)}
+            >
+              🚫
             </button>
             <button
               type="button"
@@ -290,6 +302,7 @@ export function CategoryNode({
                   onDeleteCategory={onDeleteCategory}
                   onAddCategory={onAddCategory}
                   onEditCategory={onEditCategory}
+                  onToggleBanned={onToggleBanned}
                   onSplitIntoSubcategories={onSplitIntoSubcategories}
                   onMoveCategory={onMoveCategory}
                   onMoveEntriesToCategory={onMoveEntriesToCategory}

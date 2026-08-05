@@ -1296,3 +1296,246 @@
   color: var(--text-muted);
   font-weight: 600;
 }
+
+/* ---------- goals ---------- */
+
+.goals-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.goal-add-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 110px auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.goal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.goal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.goal-item--done {
+  background: color-mix(in srgb, var(--good) 10%, transparent);
+}
+
+.goal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.goal-name {
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.goal-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goal-progress-track {
+  height: 10px;
+  background: var(--surface-1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--series-1), var(--series-5));
+  border-radius: 999px;
+  transition: width 0.4s var(--ease-out);
+}
+
+.goal-item--done .goal-progress-fill {
+  background: var(--good);
+}
+
+.goal-numbers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.goal-contribute {
+  display: flex;
+  gap: 6px;
+}
+
+.goal-contribute .input {
+  flex: 1;
+}
+
+.goal-done-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--good);
+}
+
+/* ---------- banned categories ---------- */
+
+.category-card--banned {
+  border-color: color-mix(in srgb, var(--critical) 50%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--critical) 20%, transparent);
+}
+
+.banned-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--critical) 12%, transparent);
+  color: var(--critical);
+}
+
+.icon-btn-sm--active {
+  color: var(--critical);
+  background: color-mix(in srgb, var(--critical) 10%, transparent);
+}
+
+.card--banned {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--critical) 25%, transparent);
+}
+
+.select--banned {
+  border-color: color-mix(in srgb, var(--critical) 50%, var(--border));
+}
+
+.sad-banner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--critical) 10%, transparent);
+  color: var(--critical);
+  font-size: 13px;
+  font-weight: 600;
+  animation: fade-in-up 0.25s var(--ease-out);
+}
+
+.sad-banner span:first-child {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* ---------- heatmap ---------- */
+
+.heatmap-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.heatmap-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  cursor: default;
+  transition: transform 0.12s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.08);
+}
+
+.heatmap-cell--pad {
+  background: transparent;
+}
+
+.heatmap-cell--empty {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.heatmap-cell--low {
+  background: color-mix(in srgb, var(--series-1) 25%, var(--surface-2));
+}
+
+.heatmap-cell--mid {
+  background: color-mix(in srgb, var(--series-1) 50%, var(--surface-2));
+}
+
+.heatmap-cell--high {
+  background: color-mix(in srgb, var(--series-1) 75%, var(--surface-2));
+  color: #fff;
+}
+
+.heatmap-cell--max {
+  background: var(--series-1);
+  color: #fff;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.heatmap-legend-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.heatmap-legend-sample {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+  .goal-add-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .goal-add-form .btn {
+    grid-column: 1 / -1;
+  }
+}

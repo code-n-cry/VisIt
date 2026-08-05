@@ -1,5 +1,4 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { Category, Entry } from "../types";
 import { CategoryNode } from "./CategoryNode";
 
@@ -12,6 +11,7 @@ interface Props {
   onDeleteCategory: (id: string) => void;
   onAddCategory: (name: string, parentId: string | null) => Category;
   onEditCategory: (id: string, name: string) => void;
+  onToggleBanned: (id: string) => void;
   onSplitIntoSubcategories: (categoryId: string) => void;
   onMoveCategory: (categoryId: string, newParentId: string | null) => void;
   onMoveEntriesToCategory: (entryIds: string[], targetCategoryId: string) => void;
@@ -26,6 +26,7 @@ export function CategoryList({
   onDeleteCategory,
   onAddCategory,
   onEditCategory,
+  onToggleBanned,
   onSplitIntoSubcategories,
   onMoveCategory,
   onMoveEntriesToCategory,
@@ -77,6 +78,7 @@ export function CategoryList({
           onDeleteCategory={onDeleteCategory}
           onAddCategory={onAddCategory}
           onEditCategory={onEditCategory}
+          onToggleBanned={onToggleBanned}
           onSplitIntoSubcategories={onSplitIntoSubcategories}
           onMoveCategory={onMoveCategory}
           onMoveEntriesToCategory={onMoveEntriesToCategory}

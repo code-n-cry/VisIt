@@ -37,7 +37,11 @@ export function QuickAddForm({
   const [currency, setCurrency] = useState(displayCurrency);
   const [groupId, setGroupId] = useState<string>(selectedGroupId || NO_GROUP);
   const [error, setError] = useState<string | null>(null);
+  const [bannedNotice, setBannedNotice] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isBanned = selectedCategory?.banned ?? false;
 
   // keep a valid selection if the category list changes under us
   useEffect(() => {
@@ -49,6 +53,12 @@ export function QuickAddForm({
   useEffect(() => {
     setGroupId(selectedGroupId || NO_GROUP);
   }, [selectedGroupId]);
+
+  useEffect(() => {
+    if (!bannedNotice) return;
+    const id = window.setTimeout(() => setBannedNotice(null), 5000);
+    return () => window.clearTimeout(id);
+  }, [bannedNotice]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +73,14 @@ export function QuickAddForm({
       }
       const existing = categories.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
       targetCategoryId = existing ? existing.id : onAddCategory(trimmed).id;
+    }
+
+    const targetCategory = categories.find((c) => c.id === targetCategoryId);
+    if (targetCategory?.banned) {
+      const confirmed = confirm(
+        `Категория «${targetCategory.name}» в списке ограниченных. Точно добавить трату?`,
+      );
+      if (!confirmed) return;
     }
 
     const trimmedName = itemName.trim();
@@ -84,6 +102,10 @@ export function QuickAddForm({
       currency,
     });
 
+    if (targetCategory?.banned) {
+      setBannedNotice(targetCategory.name);
+    }
+
     // Stay on the same category/currency/group so several expenses in a row are fast to enter.
     setCategoryId(targetCategoryId);
     setNewCategoryName("");
@@ -93,25 +115,30 @@ export function QuickAddForm({
   }
 
   return (
-    <form className="card stack" onSubmit={submit}>
+    <form className={`card stack${isBanned ? " card--banned" : ""}`} onSubmit={submit}>
       <div className="card-title">Добавить трату</div>
 
       <div className="field">
         <label htmlFor="category">Категория</label>
         <select
           id="category"
-          className="select"
+          className={`select${isBanned ? " select--banned" : ""}`}
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
         >
           {flatCategories.map(({ category: c, depth }) => (
             <option key={c.id} value={c.id}>
               {depth > 0 ? `${"  ".repeat(depth)}↳ ${c.name}` : c.name}
+              {c.banned ? " 🚫" : ""}
             </option>
           ))}
           <option value={NEW_CATEGORY}>+ Новая категория</option>
         </select>
       </div>
+
+      {isBanned && (
+        <p className="error-text">⚠️ Эта категория отмечена как ограниченная. Подумай дважды!</p>
+      )}
 
       {categoryId === NEW_CATEGORY && (
         <div className="field">
@@ -182,6 +209,13 @@ export function QuickAddForm({
       </div>
 
       {error && <p className="error-text">{error}</p>}
+
+      {bannedNotice && (
+        <div className="sad-banner">
+          <span>😿</span>
+          <span>Трата добавлена в ограниченную категорию «{bannedNotice}». В следующий раз постарайся удержаться!</span>
+        </div>
+      )}
 
       <button type="submit" className="btn btn-primary btn-block">
         Добавить

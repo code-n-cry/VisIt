@@ -7,6 +7,7 @@ export interface Category {
   id: string;
   name: string;
   parentId: string | null;
+  banned?: boolean;
 }
 
 export interface Entry {
@@ -17,6 +18,14 @@ export interface Entry {
   amount: number;
   currency: string;
   createdAt: string;
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  targetCurrency: string;
+  savedAmount: number;
 }
 
 export interface Settings {
@@ -31,4 +40,5 @@ export interface AppData {
   groups: Group[];
   categories: Category[];
   entries: Entry[];
+  goals: Goal[];
 }

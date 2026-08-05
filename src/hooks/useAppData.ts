@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AppData, Category, Entry, Group, Settings } from "../types";
+import type { AppData, Category, Entry, Goal, Group, Settings } from "../types";
 import { loadData, makeId, saveData } from "../lib/storage";
 import { loadCloudData, saveCloudData } from "../lib/cloudStorage";
 import { mergeAppData, shouldUploadMergedData } from "../lib/mergeAppData";
@@ -129,7 +129,7 @@ export function useAppData(userId: string | null) {
   }, []);
 
   const addCategory = useCallback((name: string, parentId: string | null = null): Category => {
-    const category: Category = { id: makeId(), name: name.trim(), parentId };
+    const category: Category = { id: makeId(), name: name.trim(), parentId, banned: false };
     setData((d) => ({ ...d, categories: [...d.categories, category] }));
     return category;
   }, []);
@@ -140,6 +140,13 @@ export function useAppData(userId: string | null) {
     setData((d) => ({
       ...d,
       categories: d.categories.map((c) => (c.id === id ? { ...c, name: trimmed } : c)),
+    }));
+  }, []);
+
+  const toggleCategoryBanned = useCallback((id: string) => {
+    setData((d) => ({
+      ...d,
+      categories: d.categories.map((c) => (c.id === id ? { ...c, banned: !c.banned } : c)),
     }));
   }, []);
 
@@ -154,6 +161,16 @@ export function useAppData(userId: string | null) {
     },
     [],
   );
+
+  const addEntries = useCallback((items: Omit<Entry, "id" | "createdAt">[]) => {
+    const createdAt = new Date().toISOString();
+    const newEntries: Entry[] = items.map((item) => ({
+      ...item,
+      id: makeId(),
+      createdAt,
+    }));
+    setData((d) => ({ ...d, entries: [...d.entries, ...newEntries] }));
+  }, []);
 
   const deleteEntry = useCallback((id: string) => {
     setData((d) => ({ ...d, entries: d.entries.filter((e) => e.id !== id) }));
@@ -203,6 +220,7 @@ export function useAppData(userId: string | null) {
         id: makeId(),
         name: g.label,
         parentId: categoryId,
+        banned: false,
       }));
       const reassign = new Map<string, string>();
       groups.forEach((g, i) => {
@@ -220,12 +238,42 @@ export function useAppData(userId: string | null) {
     });
   }, []);
 
+  const addGoal = useCallback((name: string, targetAmount: number, targetCurrency: string): Goal => {
+    const goal: Goal = {
+      id: makeId(),
+      name: name.trim(),
+      targetAmount,
+      targetCurrency,
+      savedAmount: 0,
+    };
+    setData((d) => ({ ...d, goals: [...d.goals, goal] }));
+    return goal;
+  }, []);
+
+  const editGoal = useCallback((id: string, updates: Partial<Omit<Goal, "id">>) => {
+    setData((d) => ({
+      ...d,
+      goals: d.goals.map((g) => (g.id === id ? { ...g, ...updates } : g)),
+    }));
+  }, []);
+
+  const deleteGoal = useCallback((id: string) => {
+    setData((d) => ({ ...d, goals: d.goals.filter((g) => g.id !== id) }));
+  }, []);
+
+  const contributeToGoal = useCallback((id: string, amount: number) => {
+    setData((d) => ({
+      ...d,
+      goals: d.goals.map((g) => (g.id === id ? { ...g, savedAmount: Math.max(0, g.savedAmount + amount) } : g)),
+    }));
+  }, []);
+
   const replaceAll = useCallback((next: AppData) => {
     setData(next);
   }, []);
 
   const resetAll = useCallback(() => {
-    setData({ settings: null, groups: [], categories: [], entries: [] });
+    setData({ settings: null, groups: [], categories: [], entries: [], goals: [] });
   }, []);
 
   const syncNow = useCallback(async () => {
@@ -253,12 +301,18 @@ export function useAppData(userId: string | null) {
     deleteGroup,
     addCategory,
     editCategory,
+    toggleCategoryBanned,
     addEntry,
+    addEntries,
     deleteEntry,
     deleteCategory,
     moveCategory,
     moveEntriesToCategory,
     splitIntoSubcategories,
+    addGoal,
+    editGoal,
+    deleteGoal,
+    contributeToGoal,
     replaceAll,
     resetAll,
     syncNow,
