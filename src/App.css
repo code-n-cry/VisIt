@@ -776,6 +776,10 @@
   transform: scale(0.95);
 }
 
+.category-delete-btn:hover {
+  color: var(--critical);
+}
+
 .entry-list {
   display: grid;
   grid-template-rows: 0fr;

@@ -218,6 +218,15 @@ export function CategoryNode({
             >
               ✎
             </button>
+            <button
+              type="button"
+              className="icon-btn-sm category-delete-btn"
+              aria-label={`Удалить «${category.name}»`}
+              title="Удалить категорию"
+              onClick={handleDelete}
+            >
+              ✕
+            </button>
           </>
         )}
       </div>
@@ -412,11 +421,6 @@ export function CategoryNode({
             </select>
           </div>
 
-          <div className="entry-row">
-            <button type="button" className="delete-btn" style={{ marginLeft: "auto" }} onClick={handleDelete}>
-              Удалить категорию
-            </button>
-          </div>
         </div>
       </div>
     </div>
